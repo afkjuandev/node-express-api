@@ -1,10 +1,34 @@
-import express from "express";
-import userRoutes from "./routes/user.routes";
+import express, { Express } from "express";
+import morgan from "morgan";
+import routes from "./routes";
+import { errorHandler, notFoundHandler } from "./middlewares/error.middleware";
+import { env } from "./config/env";
 
-const app = express();
+class App {
+  public app: Express;
 
-app.use(express.json());
+  constructor() {
+    this.app = express();
+    this.middlewares();
+    this.routes();
+    this.errorHandlers();
+  }
 
-app.use("/users", userRoutes);
+  private middlewares(): void {
+    this.app.use(express.json());
+    if (env.NODE_ENV !== "test") {
+      this.app.use(morgan("dev"));
+    }
+  }
 
-export default app;
+  private routes(): void {
+    this.app.use(routes);
+  }
+
+  private errorHandlers(): void {
+    this.app.use(notFoundHandler);
+    this.app.use(errorHandler);
+  }
+}
+
+export default new App().app;
